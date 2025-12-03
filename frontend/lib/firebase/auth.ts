@@ -13,7 +13,6 @@ import {
 } from 'firebase/auth';
 import { auth } from './config';
 import { useEffect, useState } from 'react';
-import { PathToFileUrlOptions } from 'url';
 
 //新規登録
 export const signup = async (email: string, password: string) => {
