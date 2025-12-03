@@ -2,15 +2,24 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { login } from "@/lib/firebase/auth";
 import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("ログイン試行:", { email, password });
+  const handleLogin = async () => {
+    try {
+      await login(email, password);
+      router.push("/"); // ログイン後にトップページへ
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "ログインに失敗しました";
+      alert(message);
+    }
   };
 
   return (
