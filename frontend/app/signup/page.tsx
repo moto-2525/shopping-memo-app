@@ -9,73 +9,71 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // 後で Firebase 担当が利用できるダミー関数
+  // ダミー処理
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (password !== confirmPassword) {
       alert("パスワードが一致しません");
       return;
     }
-
-    console.log("新規登録:", { email, password });
+    console.log("新規登録試行:", { email, password });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white shadow-md rounded-lg p-8">
-        <h1 className="text-2xl font-bold text-center mb-6">新規ユーザー登録</h1>
+    <div className="min-h-screen flex items-center justify-center bg-amber-50">
+      <div className="w-full max-w-md bg-white rounded-2xl p-10">
+        <h1 className="text-3xl font-bold text-center mb-6 text-amber-700">
+          新規登録
+        </h1>
 
-        <form onSubmit={handleSignup} className="flex flex-col gap-4">
-
+        <form onSubmit={handleSignup} className="flex flex-col gap-5">
           <div>
-            <label className="block mb-1 font-medium">メールアドレス</label>
+            <label className="block mb-2 font-medium text-amber-800">メールアドレス</label>
             <input
               type="email"
               value={email}
-              required
               onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full border border-amber-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
               placeholder="teamb@mse.com"
-              className="w-full border border-gray-300 rounded px-3 py-2"
             />
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">パスワード</label>
+            <label className="block mb-2 font-medium text-amber-800">パスワード</label>
             <input
               type="password"
               value={password}
-              required
               onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full border border-amber-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
               placeholder="パスワード"
-              className="w-full border border-gray-300 rounded px-3 py-2"
             />
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">パスワード（確認用）</label>
+            <label className="block mb-2 font-medium text-amber-800">パスワード確認</label>
             <input
               type="password"
               value={confirmPassword}
-              required
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="もう一度入力してください"
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              required
+              className="w-full border border-amber-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+              placeholder="パスワード確認"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded mt-2"
+            className="w-full bg-amber-400 hover:bg-amber-500 text-white font-semibold py-2 rounded-xl transition-colors"
           >
             新規登録
           </button>
         </form>
 
-        <p className="text-center mt-4 text-sm">
-          すでにアカウントがある→{" "}
-          <Link href="/login" className="text-blue-600 hover:underline">
-            ログインはこちら
+        <p className="text-center mt-5 text-sm text-amber-700">
+          <Link href="/login" className="underline hover:text-amber-900">
+            すでにアカウントをお持ちの方はこちら
           </Link>
         </p>
       </div>
