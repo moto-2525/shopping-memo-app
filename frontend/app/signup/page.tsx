@@ -3,22 +3,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signup } from "@/lib/firebase/auth";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
 
-  // ダミー処理
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("パスワードが一致しません");
-      return;
+  // ログインが失敗したときにリダイレクトする仕組みを追加（saori）
+  const handleSignup = async () => {
+    try {
+      await signup(email, password);
+      router.push("/");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "登録に失敗しました";
+      alert(message);
     }
-    console.log("新規登録試行:", { email, password });
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-amber-50">
       <div className="w-full max-w-md bg-white rounded-2xl p-10">
