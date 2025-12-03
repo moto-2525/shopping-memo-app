@@ -1,13 +1,33 @@
-//IDトークンを付与して、バックエンドAPIを呼び出すための汎用的なfetch関数
-import { getIdTokenForBackend } from "./firebase/auth";
+// lib/api.ts
+import { auth } from "@/lib/firebase/config";
 
-/** Authorization header を付けて fetch */
-export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getIdTokenForBackend();
-    const headers = new Headers(options.headers ?? {});
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-    headers.set("Content-Type", "application/json");
-    const res = await fetch(url, { ...options, headers, credentials: "include" });
-    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-    return res.json();
-};
+/**
+ * 認証付きで FastAPI にリクエストを送る関数
+ */
+export async function fetchWithAuth(
+    url: string,
+    options: RequestInit = {}
+) {
+    // Firebase のログインユーザー取得
+    const user = auth.currentUser;
+
+    // 未ログインの場合
+    if (!user) {
+        throw new Error("ログインが必要です");
+    }
+
+    // Firebase IDトークン取得
+    const token = await user.getIdToken();
+
+    //トークンをAuthorizationヘッダー追加して送信
+    const res = await fetch(url, {
+        ...options,
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            ...options.headers,
+        },
+    });
+
+    return res;
+}
