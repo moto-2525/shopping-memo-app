@@ -6,14 +6,16 @@ class ShoppingListBase(BaseModel):
     quantity: int = 1
     is_checked: bool = False
 
-# ▼ POST用
+
+# ▼ POST / リクエスト用（新規作成時）
 class ShoppingListCreate(ShoppingListBase):
-    firebase_uid: str
+    firebase_uid: str  # ← こっちが正しい！
+
 
 # ▼ レスポンス用（GET / POST）
 class ShoppingListResponse(ShoppingListBase):
     id: int
-    firebase_uid: str
+    firebase_uid: str  # ← ここも firebase_uid
 
     class Config:
-        from_attributes = True  # Pydantic v2
+        from_attributes = True  # Pydantic v2 用
