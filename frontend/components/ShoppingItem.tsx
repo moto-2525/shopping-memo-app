@@ -28,12 +28,12 @@ export default function ShoppingItem({
     >
       {/* 左側にチェックボタン */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => onCheck(id)}
-          className="text-sm px-3 py-1 bg-green-200 rounded hover:bg-green-300"
-        >
-          ✓
-        </button>
+        <input
+          type="checkbox"
+          checked={isDone}
+          onChange={() => onCheck(id)}
+          className="w-5 h-5 accent-green-500" // Tailwindで色とサイズ調整
+        />
 
         {/* アイテム情報（横並び） */}
         <div className="flex items-center gap-4">
