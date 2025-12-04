@@ -1,13 +1,69 @@
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
+
 from app.models.shopping_list import ShoppingList
-from app.schemas.shopping_list import ShoppingListCreate
+from app.schemas.shopping_list import ShoppingCreate, ShoppingUpdate
 
-def create_list(db: Session, uid: str, data: ShoppingListCreate):
-    item = ShoppingList(uid=uid, title=data.title)
-    db.add(item)
+
+# ユーザーごと一覧取得
+def get_items_by_user(db: Session, firebase_uid: str):
+    return db.query(ShoppingList).filter(ShoppingList.firebase_uid == firebase_uid).all()
+
+
+# 新規作成
+def create_item(db: Session, data: ShoppingCreate):
+    db_obj = ShoppingList(
+        firebase_uid=data.firebase_uid,
+        item=data.item,
+        quantity=data.quantity,
+        is_checked=data.is_checked,
+    )
+
+    db.add(db_obj)
     db.commit()
-    db.refresh(item)
-    return item
+    db.refresh(db_obj)
+    return db_obj
 
-def get_lists_by_uid(db: Session, uid: str):
-    return db.query(ShoppingList).filter(ShoppingList.uid == uid).all()
+
+# 1件取得
+def get_item(db: Session, item_id: int):
+    return db.query(ShoppingList).filter(ShoppingList.id == item_id).first()
+
+
+# 更新（PATCH）
+def update_item(db: Session, item_id: int, updates: ShoppingUpdate):
+    db_obj = get_item(db, item_id)
+
+    if not db_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found"
+        )
+
+    if updates.item is not None:
+        db_obj.item = updates.item
+
+    if updates.quantity is not None:
+        db_obj.quantity = updates.quantity
+
+    if updates.is_checked is not None:
+        db_obj.is_checked = updates.is_checked
+
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
+# 削除
+def delete_item(db: Session, item_id: int):
+    db_obj = get_item(db, item_id)
+
+    if not db_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found"
+        )
+
+    db.delete(db_obj)
+    db.commit()
+
