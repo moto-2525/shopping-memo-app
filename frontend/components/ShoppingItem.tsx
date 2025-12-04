@@ -26,29 +26,33 @@ export default function ShoppingItem({
         ${priority === "high" ? "bg-red-100" : "bg-white"} 
         ${isDone ? "opacity-60 line-through" : ""}`}
     >
-      <div>
-        <p className="text-lg font-semibold">
-          {name}（{quantity}個）
-        </p>
-        <p className="text-sm text-gray-600">
-          優先度：{priority === "high" ? "高" : "低"}
-        </p>
-      </div>
-
-      <div className="flex gap-3">
+      {/* 左側：チェックボタン + 情報 */}
+      <div className="flex items-center gap-4">
+        {/* ✓ チェックボタン（左に移動） */}
         <button
           onClick={() => onCheck(id)}
           className="text-sm px-3 py-1 bg-green-200 rounded hover:bg-green-300"
         >
           ✓
         </button>
-        <button
-          onClick={() => onDelete(id)}
-          className="text-sm px-3 py-1 bg-red-200 rounded hover:bg-red-300"
-        >
-          削除
-        </button>
+
+        {/* アイテム情報（横並び） */}
+        <div className="flex items-center gap-4">
+          <p className="text-lg font-semibold">{name}</p>
+          <p className="text-gray-700">{quantity}個</p>
+          <p className="text-gray-600 text-sm">
+            {priority === "high" ? "優先度:高" : "優先度:低"}
+          </p>
+        </div>
       </div>
+
+      {/* 右側：削除ボタン */}
+      <button
+        onClick={() => onDelete(id)}
+        className="text-sm px-3 py-1 bg-red-200 rounded hover:bg-red-300"
+      >
+        削除
+      </button>
     </div>
   );
 }
