@@ -26,7 +26,7 @@ export default function ShoppingItem({
         ${priority === "high" ? "bg-red-100" : "bg-white"} 
         ${isDone ? "opacity-60 line-through" : ""}`}
     >
-      {/* 左側にチェックボタン */}
+      {/* 左側にチェックボックス */}
       <div className="flex items-center gap-4">
         <input
           type="checkbox"
@@ -39,9 +39,6 @@ export default function ShoppingItem({
         <div className="flex items-center gap-4">
           <p className="text-lg font-semibold">{name}</p>
           <p className="text-gray-700">{quantity}個</p>
-          <p className="text-gray-600 text-sm">
-            {priority === "high" ? "優先度:高" : "優先度:低"}
-          </p>
         </div>
       </div>
 

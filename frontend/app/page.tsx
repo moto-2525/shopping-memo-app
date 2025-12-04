@@ -107,10 +107,12 @@ export default function HomePage() {
     console.log("ログアウト処理（ダミー）");
   };
 
+  // 高優先度・低優先度のアイテムを分ける
+  const highPriorityItems = items.filter(item => item.priority === "high");
+  const lowPriorityItems = items.filter(item => item.priority === "low");
+
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center py-10">
-
-      
 
       {/* ▼ 買い物リスト */}
       <h1 className="text-5xl font-bold text-center mb-4 text-amber-600">
@@ -118,18 +120,43 @@ export default function HomePage() {
       </h1>
 
       <div className="w-full max-w-md">
-        {items.map((item) => (
-          <ShoppingItem
-            key={item.id}
-            id={item.id}
-            name={item.name}
-            quantity={item.quantity}
-            priority={item.priority}
-            isDone={item.isDone}
-            onCheck={handleCheck}
-            onDelete={handleDelete}
-          />
-        ))}
+        {/* 高優先度 */}
+        {highPriorityItems.length > 0 && (
+          <>
+            <h2 className="text-2xl font-bold text-red-600 mb-2">優先度 高</h2>
+            {highPriorityItems.map(item => (
+              <ShoppingItem
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                quantity={item.quantity}
+                priority={item.priority}
+                isDone={item.isDone}
+                onCheck={handleCheck}
+                onDelete={handleDelete}
+              />
+            ))}
+          </>
+        )}
+
+        {/* 低優先度 */}
+        {lowPriorityItems.length > 0 && (
+          <>
+            <h2 className="text-2xl font-bold text-gray-600 mt-6 mb-2">優先度 低</h2>
+            {lowPriorityItems.map(item => (
+              <ShoppingItem
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                quantity={item.quantity}
+                priority={item.priority}
+                isDone={item.isDone}
+                onCheck={handleCheck}
+                onDelete={handleDelete}
+              />
+            ))}
+          </>
+        )}
       </div>
 
       {/* ▼ 白いカード（追加フォーム） */}
@@ -152,7 +179,6 @@ export default function HomePage() {
     </div>
   );
 }
-
 
 
 
