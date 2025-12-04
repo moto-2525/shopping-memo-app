@@ -113,7 +113,7 @@ export default function HomePage() {
       
 
       {/* ▼ 買い物リスト */}
-      <h1 className="text-2xl font-bold text-center mb-4 text-amber-600">
+      <h1 className="text-5xl font-bold text-center mb-4 text-amber-600">
         買い物リスト
       </h1>
 
