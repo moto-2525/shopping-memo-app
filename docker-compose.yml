@@ -26,6 +26,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks: # 👈 ← これ追加
+      - app-network
 
   db:
     image: postgres:16

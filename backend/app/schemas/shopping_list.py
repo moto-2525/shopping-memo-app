@@ -1,28 +1,21 @@
 from pydantic import BaseModel
 
-
-# -------------------------------
-# 共通フィールド
-# -------------------------------
+# ▼ 共通フィールド
 class ShoppingListBase(BaseModel):
     title: str
     quantity: int = 1
     is_checked: bool = False
 
 
-# -------------------------------
-# POST / リクエスト用
-# -------------------------------
+# ▼ POST / リクエスト用（新規作成時）
 class ShoppingListCreate(ShoppingListBase):
-    pass
+    firebase_uid: str  # ← こっちが正しい！
 
 
-# -------------------------------
-# レスポンス用（GET / POST 返り値）
-# -------------------------------
-class ShoppingList(ShoppingListBase):
+# ▼ レスポンス用（GET / POST）
+class ShoppingListResponse(ShoppingListBase):
     id: int
-    uid: str  # Firebase UID
+    firebase_uid: str  # ← ここも firebase_uid
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # Pydantic v2 用
