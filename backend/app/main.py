@@ -1,20 +1,36 @@
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from app.db.session import Base, engine, get_db
-from app.schemas.shopping_list import ShoppingListCreate, ShoppingListResponse
-from app.crud.shopping_list import create_list, get_lists_by_uid
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# DB テーブル作成（初回のみ）
-Base.metadata.create_all(bind=engine)
+# 🟣 ルーター import
+from app.api.v1.shopping_list import router as shopping_list_router
 
-app = FastAPI()
+app = FastAPI(
+    title="Shopping Memo API",
+    version="1.0.0",
+)
 
-# GET ルート（既存）
-@app.get("/shopping_lists/", response_model=list[ShoppingListResponse])
-def read_lists(db: Session = Depends(get_db)):
-    return get_lists_by_uid(db, uid="testuser")
+# --- CORS 設定 ---
+origins = [
+    "http://localhost:3000",
+    "http://localhost:4000",
+]
 
-# POST ルート（追加）
-@app.post("/shopping_lists/", response_model=ShoppingListResponse)
-def add_list(item: ShoppingListCreate, db: Session = Depends(get_db)):
-    return create_list(db, uid="testuser", data=item)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- ルーター登録 ---
+app.include_router(
+    shopping_list_router,
+    prefix="/shopping_lists",
+    tags=["shopping_lists"],
+)
+
+# --- 動作確認用 ---
+@app.get("/")
+async def root():
+    return {"message": "Shopping Memo API is running!"}
