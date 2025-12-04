@@ -85,7 +85,6 @@ export default function HomePage() {
         { id: Date.now(), ...item, isDone: false },
       ];
 
-      // ▼ 優先度 高 → 低 の順にソート
       return newItems.sort((a, b) =>
         a.priority === b.priority ? 0 : a.priority === "high" ? -1 : 1
       );
@@ -109,38 +108,47 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-amber-50 flex items-center justify-center">
-      <div className="w-full max-w-md bg-white rounded-2xl p-10 relative shadow">
+    <div className="min-h-screen bg-amber-50 flex flex-col items-center py-10">
 
-        <button
-          onClick={handleLogout}
-          className="absolute top-4 right-4 text-sm text-blue-600 underline hover:text-red-800"
-        >
-          ログアウト
-        </button>
+      
 
-        <h1 className="text-3xl font-bold text-center mb-6 text-amber-700">
-          買い物リスト
+      {/* ▼ 買い物リスト */}
+      <h1 className="text-2xl font-bold text-center mb-4 text-amber-600">
+        買い物リスト
+      </h1>
+
+      <div className="w-full max-w-md">
+        {items.map((item) => (
+          <ShoppingItem
+            key={item.id}
+            id={item.id}
+            name={item.name}
+            quantity={item.quantity}
+            priority={item.priority}
+            isDone={item.isDone}
+            onCheck={handleCheck}
+            onDelete={handleDelete}
+          />
+        ))}
+      </div>
+
+      {/* ▼ 白いカード（追加フォーム） */}
+      <div className="w-full max-w-md bg-white rounded-2xl p-10 mt-10 shadow">
+        <h1 className="text-xl font-bold text-center mb-4 text-amber-500">
+          ＋アイテム追加
         </h1>
 
-        <div className="mt-6">
-          {items.map((item) => (
-            <ShoppingItem
-              key={item.id}
-              id={item.id}
-              name={item.name}
-              quantity={item.quantity}
-              priority={item.priority}
-              isDone={item.isDone}
-              onCheck={handleCheck}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-
         <ShoppingForm onAdd={handleAdd} />
-
       </div>
+
+      {/* ▼ ログアウトボタン */}
+      <button
+        onClick={handleLogout}
+        className="mb-6 text-sm text-blue-600 underline hover:text-red-800"
+      >
+        ログアウト
+      </button>
+
     </div>
   );
 }
@@ -154,10 +162,6 @@ export default function HomePage() {
 
 
 
-
-              //（理想）ボタン購入済リストページへ
-
-//（理想）AIページへ
 
 
 

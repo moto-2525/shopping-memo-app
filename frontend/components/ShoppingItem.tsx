@@ -26,9 +26,8 @@ export default function ShoppingItem({
         ${priority === "high" ? "bg-red-100" : "bg-white"} 
         ${isDone ? "opacity-60 line-through" : ""}`}
     >
-      {/* 左側：チェックボタン + 情報 */}
+      {/* 左側にチェックボタン */}
       <div className="flex items-center gap-4">
-        {/* ✓ チェックボタン（左に移動） */}
         <button
           onClick={() => onCheck(id)}
           className="text-sm px-3 py-1 bg-green-200 rounded hover:bg-green-300"
