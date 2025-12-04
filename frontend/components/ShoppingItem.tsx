@@ -1,11 +1,12 @@
 //アイテム１件分の表示
 "use client";
 
-type ItemProps = {
+type Props = {
   id: number;
   name: string;
-  isDone: boolean;
+  quantity: number;
   priority: "high" | "low";
+  isDone: boolean;
   onCheck: (id: number) => void;
   onDelete: (id: number) => void;
 };
@@ -13,34 +14,41 @@ type ItemProps = {
 export default function ShoppingItem({
   id,
   name,
-  isDone,
+  quantity,
   priority,
+  isDone,
   onCheck,
   onDelete,
-}: ItemProps) {
+}: Props) {
   return (
     <div
-      className={`flex justify-between items-center p-3 rounded-lg mb-3 border
-        ${priority === "high" ? "bg-red-100 border-red-300" : "bg-white"}
-      `}
+      className={`flex justify-between items-center p-4 mb-3 rounded-xl border shadow-sm transition 
+        ${priority === "high" ? "bg-red-100" : "bg-white"} 
+        ${isDone ? "opacity-60 line-through" : ""}`}
     >
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={isDone}
-          onChange={() => onCheck(id)}
-        />
-        <span className={isDone ? "line-through text-gray-500" : ""}>
-          {name}
-        </span>
-      </label>
+      <div>
+        <p className="text-lg font-semibold">
+          {name}（{quantity}個）
+        </p>
+        <p className="text-sm text-gray-600">
+          優先度：{priority === "high" ? "高" : "低"}
+        </p>
+      </div>
 
-      <button
-        onClick={() => onDelete(id)}
-        className="text-sm text-red-600 hover:underline"
-      >
-        削除
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={() => onCheck(id)}
+          className="text-sm px-3 py-1 bg-green-200 rounded hover:bg-green-300"
+        >
+          ✓
+        </button>
+        <button
+          onClick={() => onDelete(id)}
+          className="text-sm px-3 py-1 bg-red-200 rounded hover:bg-red-300"
+        >
+          削除
+        </button>
+      </div>
     </div>
   );
 }
