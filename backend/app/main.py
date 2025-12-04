@@ -1,7 +1,11 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
+
 from app.db.session import Base, engine, get_db
-from app.schemas.shopping_list import ShoppingListCreate, ShoppingListResponse
+from app.schemas.shopping_list import (
+    ShoppingListCreate,
+    ShoppingListResponse
+)
 from app.crud.shopping_list import create_list, get_lists_by_uid
 
 # DB テーブル作成（初回のみ）
