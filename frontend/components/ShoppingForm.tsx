@@ -31,7 +31,7 @@ export default function ShoppingForm({ onAdd }: Props) {
         className="w-full border border-amber-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="買うもの（例: 牛乳）"
+        placeholder="買うもの"
       />
 
       {/* 個数 */}

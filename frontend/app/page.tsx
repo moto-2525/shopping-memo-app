@@ -73,16 +73,23 @@ import ShoppingForm from "@/components/ShoppingForm";
 
 export default function HomePage() {
   const [items, setItems] = useState([
-    { id: 1, name: "牛乳", isDone: false },
-    { id: 2, name: "パン", isDone: false },
-    { id: 3, name: "卵", isDone: false },
+    { id: 1, name: "牛乳", quantity: 1, isDone: false, priority: "high" },
+    { id: 2, name: "パン", quantity: 1, isDone: false, priority: "high" },
+    { id: 3, name: "卵", quantity: 1, isDone: false, priority: "low" },
   ]);
 
-  const handleAdd = (name: string) => {
-    setItems((prev) => [
-      ...prev,
-      { id: Date.now(), name, isDone: false },
-    ]);
+  const handleAdd = (item: { name: string; quantity: number; priority: "high" | "low" }) => {
+    setItems((prev) => {
+      const newItems = [
+        ...prev,
+        { id: Date.now(), ...item, isDone: false },
+      ];
+
+      // ▼ 優先度 高 → 低 の順にソート
+      return newItems.sort((a, b) =>
+        a.priority === b.priority ? 0 : a.priority === "high" ? -1 : 1
+      );
+    });
   };
 
   const handleCheck = (id: number) => {
@@ -97,7 +104,6 @@ export default function HomePage() {
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // ダミーのログアウト（Firebase認証を入れる？）
   const handleLogout = () => {
     console.log("ログアウト処理（ダミー）");
   };
@@ -106,10 +112,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-amber-50 flex items-center justify-center">
       <div className="w-full max-w-md bg-white rounded-2xl p-10 relative shadow">
 
-        {/* ログアウトボタン */}
         <button
           onClick={handleLogout}
-          className="absolute top-4 right-4 text-sm text-red-600 underline hover:text-red-800"
+          className="absolute top-4 right-4 text-sm text-blue-600 underline hover:text-red-800"
         >
           ログアウト
         </button>
@@ -118,20 +123,23 @@ export default function HomePage() {
           買い物リスト
         </h1>
 
-        <ShoppingForm onAdd={handleAdd} />
-
         <div className="mt-6">
           {items.map((item) => (
             <ShoppingItem
               key={item.id}
               id={item.id}
               name={item.name}
+              quantity={item.quantity}
+              priority={item.priority}
               isDone={item.isDone}
               onCheck={handleCheck}
               onDelete={handleDelete}
             />
           ))}
         </div>
+
+        <ShoppingForm onAdd={handleAdd} />
+
       </div>
     </div>
   );
@@ -140,7 +148,14 @@ export default function HomePage() {
 
 
 
-//（理想）ボタン購入済リストページへ
+
+
+
+
+
+
+
+              //（理想）ボタン購入済リストページへ
 
 //（理想）AIページへ
 

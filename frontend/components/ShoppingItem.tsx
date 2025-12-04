@@ -1,10 +1,11 @@
 //アイテム１件分の表示
 "use client";
 
-type Props = {
+type ItemProps = {
   id: number;
   name: string;
   isDone: boolean;
+  priority: "high" | "low";
   onCheck: (id: number) => void;
   onDelete: (id: number) => void;
 };
@@ -13,33 +14,32 @@ export default function ShoppingItem({
   id,
   name,
   isDone,
+  priority,
   onCheck,
   onDelete,
-}: Props) {
+}: ItemProps) {
   return (
-    <div className="flex items-center justify-between p-2 border-b">
-      {/* 左側：✔︎ボタン + テキスト */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => onCheck(id)}
-          className={`w-7 h-7 flex items-center justify-center rounded-full border ${
-            isDone ? "bg-green-500 text-white" : "bg-white text-green-600"
-          }`}
-        >
-          ✔
-        </button>
-
-        <span className={isDone ? "line-through text-gray-400" : ""}>
+    <div
+      className={`flex justify-between items-center p-3 rounded-lg mb-3 border
+        ${priority === "high" ? "bg-red-100 border-red-300" : "bg-white"}
+      `}
+    >
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={isDone}
+          onChange={() => onCheck(id)}
+        />
+        <span className={isDone ? "line-through text-gray-500" : ""}>
           {name}
         </span>
-      </div>
+      </label>
 
-      {/* 右側：削除ボタン */}
       <button
         onClick={() => onDelete(id)}
-        className="text-red-500 hover:text-red-700 text-lg px-2"
+        className="text-sm text-red-600 hover:underline"
       >
-        🗑️
+        削除
       </button>
     </div>
   );
