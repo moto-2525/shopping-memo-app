@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.models.shopping_list import ShoppingList
-from app.schemas.shopping_list import ShoppingCreate, ShoppingUpdate
+from app.schemas.shopping_list import ShoppingListCreate, ShoppingListUpdate
 
 
 # UID一覧取得
@@ -11,7 +11,7 @@ def get_lists_by_uid(db: Session, firebase_uid: str):
 
 
 # 新規作成
-def create_list(db: Session, data: ShoppingCreate):
+def create_list(db: Session, data: ShoppingListCreate):
     db_obj = ShoppingList(
         firebase_uid=data.firebase_uid,
         item=data.item,
@@ -31,7 +31,7 @@ def get_list(db: Session, item_id: int):
 
 
 # 更新（PATCH）
-def update_list(db: Session, item_id: int, updates: ShoppingUpdate):
+def update_list(db: Session, item_id: int, updates: ShoppingListUpdate):
     db_obj = get_list(db, item_id)
 
     if not db_obj:
@@ -74,7 +74,7 @@ def toggle_done(db: Session, item_id: int):
 
 # 削除
 def delete_list(db: Session, item_id: int):
-    db_obj = get_item(db, item_id)
+    db_obj = get_list(db, item_id)
 
     if not db_obj:
         raise HTTPException(

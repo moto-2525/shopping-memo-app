@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 # ▼ 共通フィールド
 class ShoppingListBase(BaseModel):
-    title: str
+    item: str
     quantity: int = 1
     is_checked: bool = False
 
@@ -19,3 +19,13 @@ class ShoppingListResponse(ShoppingListBase):
 
     class Config:
         from_attributes = True  # Pydantic v2 用
+
+# ▼ 更新用（CREATE）
+class ShoppingListUpdate(BaseModel):
+    title: str | None = None
+    quantity: int | None = None
+    is_checked: bool | None = None
+
+# ▼ トグル
+class ShoppingListToggle(BaseModel):
+    is_checked: bool
