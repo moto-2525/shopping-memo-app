@@ -23,8 +23,8 @@ export default function ShoppingItem({
   return (
     <div
       className={`flex justify-between items-center p-4 mb-3 rounded-xl border shadow-sm transition 
-        ${priority === "high" ? "bg-red-100" : "bg-white"} 
-        ${isDone ? "opacity-60 line-through" : ""}`}
+        ${priority === "high" ? "bg-white" : "bg-white"} 
+        ${isDone ? "bg-gray-200 opacity-60 line-through" : "bg-white"}`}
     >
       {/* 左側にチェックボックス */}
       <div className="flex items-center gap-4">
