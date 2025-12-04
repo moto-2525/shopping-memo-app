@@ -28,6 +28,8 @@ services:
         condition: service_healthy
     networks: # 👈 ← これ追加
       - app-network
+    env_file: # 
+      - ./backend/.env
 
   db:
     image: postgres:16
