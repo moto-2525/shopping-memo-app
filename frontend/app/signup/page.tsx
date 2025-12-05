@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { signup } from "@/lib/firebase/auth";
 import { useRouter } from "next/navigation";
+import "@/lib/firebase/config";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");

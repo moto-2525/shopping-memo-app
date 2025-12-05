@@ -67,9 +67,12 @@
 //トップページ
 "use client";
 
+import "@/lib/firebase/config";
 import { useState, useEffect } from "react";
 import ShoppingItem from "@/components/ShoppingItem";
 import ShoppingForm from "@/components/ShoppingForm";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import "@/lib/firebase/config";
 
 // 型定義
 type ApiShoppingItem = {
@@ -99,13 +102,28 @@ const convertItem = (d: ApiShoppingItem): ShoppingItemType => ({
 
 export default function HomePage() {
   const [items, setItems] = useState<ShoppingItemType[]>([]);
+  const [userToken, setUserToken] = useState<string | null>(null);
 
-  // ① 初回ロード：一覧 GET
+  // ① Firebase: トークン取得
   useEffect(() => {
-    const token = localStorage.getItem("idToken");
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setUserToken(null);
+        return;
+      }
+      const token = await user.getIdToken();
+      setUserToken(token);
+    });
+
+    return () => unsubscribe();
+  }, []);
+  // ② トークン取得後に一覧取得
+  useEffect(() => {
+    if (!userToken) return;
 
     fetch("/api/shopping_lists", {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${userToken}` },
     })
       .then((res) => res.json())
       .then((data: ApiShoppingItem[]) => {
@@ -113,22 +131,21 @@ export default function HomePage() {
         setItems(formatted);
       })
       .catch((err) => console.error("GET エラー:", err));
-  }, []);
-
-  // ② アイテム追加（POST）
+  }, [userToken]);
+  // ③ アイテム追加（POST）
   const handleAdd = async (item: {
     name: string;
     quantity: number;
     priority: "high" | "low";
   }) => {
-    const token = localStorage.getItem("idToken");
+    if (!userToken) return;
 
     try {
       const res = await fetch("/api/shopping_lists", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${userToken}`,
         },
         body: JSON.stringify({
           item: item.name,
@@ -144,9 +161,9 @@ export default function HomePage() {
     }
   };
 
-  // ③ チェック ON/OFF（PATCH）
+  // ④ チェックON/OFF
   const handleCheck = async (id: number) => {
-    const token = localStorage.getItem("idToken");
+    if (!userToken) return;
 
     const target = items.find((i) => i.id === id);
     if (!target) return;
@@ -158,12 +175,11 @@ export default function HomePage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${userToken}`,
         },
         body: JSON.stringify({ isDone: newValue }),
       });
 
-      // ローカル更新
       setItems((prev) =>
         prev.map((item) =>
           item.id === id ? { ...item, isDone: newValue } : item
@@ -174,14 +190,14 @@ export default function HomePage() {
     }
   };
 
-  // ④ 削除（DELETE）
+  // ⑤ 削除
   const handleDelete = async (id: number) => {
-    const token = localStorage.getItem("idToken");
+    if (!userToken) return;
 
     try {
       await fetch(`/api/shopping_lists/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${userToken}` },
       });
 
       setItems((prev) => prev.filter((item) => item.id !== id));
@@ -190,9 +206,10 @@ export default function HomePage() {
     }
   };
 
-  // ⑤ チェック済み一括削除
+  // ⑥ チェック済み一括削除
   const handleBulkDelete = async () => {
-    const token = localStorage.getItem("idToken");
+    if (!userToken) return;
+
     const checkedIds = items.filter((i) => i.isDone).map((i) => i.id);
 
     if (checkedIds.length === 0) {
@@ -205,12 +222,14 @@ export default function HomePage() {
         checkedIds.map((id) =>
           fetch(`/api/shopping_lists/${id}`, {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${userToken}` },
           })
         )
       );
 
-      setItems((prev) => prev.filter((item) => !item.isDone));
+      setItems((prev) =>
+        prev.filter((item) => !item.isDone)
+      );
     } catch (err) {
       console.error("Bulk DELETE エラー:", err);
     }
@@ -218,7 +237,10 @@ export default function HomePage() {
 
   // ⑥ ログアウト
   const handleLogout = () => {
-    console.log("ログアウト処理（Firebase 担当が実装）");
+    const auth = getAuth();
+    auth.signOut();
+    setUserToken(null);
+    setItems([]);
   };
 
   // 表示用優先度グループ分け
