@@ -20,7 +20,7 @@ export async function fetchWithAuth(
     const token = await user.getIdToken();
 
     //トークンをAuthorizationヘッダー追加して送信
-    const res = await fetch(url, {
+    const res = await fetch("http://localhost:8000/shopping_lists", {
         ...options,
         headers: {
             "Content-Type": "application/json",
