@@ -74,17 +74,27 @@ import ShoppingForm from "@/components/ShoppingForm";
 export default function HomePage() {
   const [items, setItems] = useState([]);
 
+  // ※ FastAPI → React の形式に変換する関数
+  const convertItem = (d: any) => ({
+    id: d.id,
+    name: d.item,
+    quantity: d.numberOfItem,
+    priority: d.priority,
+    isDone: d.isDone,
+  });
+
   // ① 初回ロード：一覧取得（GET）
   useEffect(() => {
     const token = localStorage.getItem("idToken");
 
     fetch("/api/shopping_lists", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setItems(data))
+      .then((data) => {
+        const formatted = data.map((d: any) => convertItem(d));
+        setItems(formatted);
+      })
       .catch((err) => console.error("GET エラー:", err));
   }, []);
 
@@ -111,7 +121,7 @@ export default function HomePage() {
       });
 
       const newItem = await res.json();
-      setItems((prev) => [...prev, newItem]);
+      setItems((prev) => [...prev, convertItem(newItem)]);
     } catch (err) {
       console.error("POST エラー:", err);
     }
@@ -121,6 +131,12 @@ export default function HomePage() {
   const handleCheck = async (id: number) => {
     const token = localStorage.getItem("idToken");
 
+    // まずローカルの現在の isDone を取得
+    const target = items.find((i) => i.id === id);
+    if (!target) return;
+
+    const newValue = !target.isDone;
+
     try {
       await fetch(`/api/shopping_lists/${id}`, {
         method: "PATCH",
@@ -128,15 +144,13 @@ export default function HomePage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          isDone: true,
-        }),
+        body: JSON.stringify({ isDone: newValue }),
       });
 
       // ローカル更新
       setItems((prev) =>
         prev.map((item) =>
-          item.id === id ? { ...item, isDone: !item.isDone } : item
+          item.id === id ? { ...item, isDone: newValue } : item
         )
       );
     } catch (err) {
@@ -160,11 +174,9 @@ export default function HomePage() {
     }
   };
 
-  // ⑤ 追加：チェックしたアイテムを一括削除（DELETE 複数）
+  // ⑤ チェック済み一括削除
   const handleBulkDelete = async () => {
     const token = localStorage.getItem("idToken");
-
-    // チェック済みの id を全部集める
     const checkedIds = items.filter((i) => i.isDone).map((i) => i.id);
 
     if (checkedIds.length === 0) {
@@ -173,7 +185,6 @@ export default function HomePage() {
     }
 
     try {
-      // まとめて DELETE
       await Promise.all(
         checkedIds.map((id) =>
           fetch(`/api/shopping_lists/${id}`, {
@@ -183,14 +194,13 @@ export default function HomePage() {
         )
       );
 
-      // ローカル状態から一括で削除
       setItems((prev) => prev.filter((item) => !item.isDone));
     } catch (err) {
       console.error("Bulk DELETE エラー:", err);
     }
   };
 
-  // ⑥ ログアウト（Firebase関係）
+  // ⑥ ログアウト
   const handleLogout = () => {
     console.log("ログアウト処理（Firebase 担当が実装）");
   };
@@ -203,7 +213,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-amber-50 flex flex-col items-center py-10">
       {/* ▼ 買い物リスト */}
       <h1 className="text-5xl font-bold text-center mb-4 text-amber-600">
-      買い物リスト
+        買い物リスト
       </h1>
 
       <div className="w-full max-w-md">
@@ -221,52 +231,53 @@ export default function HomePage() {
                 isDone={item.isDone}
                 onCheck={handleCheck}
                 onDelete={handleDelete}
-             />
-           ))}
-         </>
-       )}
+              />
+            ))}
+          </>
+        )}
 
         {/* 低優先度 */}
         {lowPriorityItems.length > 0 && (
           <>
-            <h2 className="text-2xl font-bold text-gray-600 mt-6 mb-2">優先度 低</h2>
-          {lowPriorityItems.map((item) => (
-           <ShoppingItem
-            key={item.id}
-            id={item.id}
-            name={item.name}
-            quantity={item.quantity}
-            priority={item.priority}
-            isDone={item.isDone}
-            onCheck={handleCheck}
-            onDelete={handleDelete}
-          />
-      ))}
-    </>
-  )}
-</div>
+            <h2 className="text-2xl font-bold text-gray-600 mt-6 mb-2">
+              優先度 低
+            </h2>
+            {lowPriorityItems.map((item) => (
+              <ShoppingItem
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                quantity={item.quantity}
+                priority={item.priority}
+                isDone={item.isDone}
+                onCheck={handleCheck}
+                onDelete={handleDelete}
+              />
+            ))}
+          </>
+        )}
+      </div>
 
-{/* チェック済み一括削除ボタン（移動＆見た目変更） */}
-<div className="w-full max-w-md mt-6">
-  <button
-    onClick={handleBulkDelete}
-    className="w-full bg-white border border-red-300 text-red-600 font-semibold py-3 rounded-xl shadow hover:bg-red-50 transition"
-  >
-    チェック済みアイテムを一括削除
-  </button>
-</div>
+      {/* ▼ チェック済み一括削除 */}
+      <div className="w-full max-w-md mt-6">
+        <button
+          onClick={handleBulkDelete}
+          className="w-full bg-white border border-red-300 text-red-600 font-semibold py-3 rounded-xl shadow hover:bg-red-50 transition"
+        >
+          チェック済みアイテムを一括削除
+        </button>
+      </div>
 
-{/* ▼ 白いカード（追加フォーム） */}
-<div className="w-full max-w-md bg-white rounded-2xl p-10 mt-10 shadow">
-  <h1 className="text-xl font-bold text-center mb-4 text-amber-500">
-    ＋アイテム追加
-  </h1>
+      {/* ▼ 白いカード（追加フォーム） */}
+      <div className="w-full max-w-md bg-white rounded-2xl p-10 mt-10 shadow">
+        <h1 className="text-xl font-bold text-center mb-4 text-amber-500">
+          ＋アイテム追加
+        </h1>
 
-  <ShoppingForm onAdd={handleAdd} />
-</div>
+        <ShoppingForm onAdd={handleAdd} />
+      </div>
 
-
-      {/* ログアウトボタン */}
+      {/* ▼ ログアウト */}
       <button
         onClick={handleLogout}
         className="mb-6 mt-2 text-sm text-blue-600 underline hover:text-red-800"
