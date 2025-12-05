@@ -67,49 +67,110 @@
 //トップページ
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ShoppingItem from "@/components/ShoppingItem";
 import ShoppingForm from "@/components/ShoppingForm";
 
 export default function HomePage() {
-  const [items, setItems] = useState([
-    { id: 1, name: "牛乳", quantity: 1, isDone: false, priority: "high" },
-    { id: 2, name: "パン", quantity: 1, isDone: false, priority: "high" },
-    { id: 3, name: "卵", quantity: 1, isDone: false, priority: "low" },
-  ]);
+  const [items, setItems] = useState([]);
 
-  const handleAdd = (item: { name: string; quantity: number; priority: "high" | "low" }) => {
-    setItems((prev) => {
-      const newItems = [
-        ...prev,
-        { id: Date.now(), ...item, isDone: false },
-      ];
+  // ① 初回ロード：一覧取得（GET）
+  useEffect(() => {
+    const token = localStorage.getItem("idToken"); // Firebase関係
 
-      return newItems.sort((a, b) =>
-        a.priority === b.priority ? 0 : a.priority === "high" ? -1 : 1
+    fetch("/api/shopping_lists", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setItems(data))
+      .catch((err) => console.error("GET エラー:", err));
+  }, []);
+
+  // ② アイテム追加（POST）
+  const handleAdd = async (item: {
+    name: string;
+    quantity: number;
+    priority: "high" | "low";
+  }) => {
+    const token = localStorage.getItem("idToken");
+
+    try {
+      const res = await fetch("/api/shopping_lists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          item: item.name,
+          numberOfItem: item.quantity,
+          priority: item.priority,
+        }),
+      });
+
+      const newItem = await res.json();
+
+      // 追加して状態更新
+      setItems((prev) => [...prev, newItem]);
+    } catch (err) {
+      console.error("POST エラー:", err);
+    }
+  };
+
+  // ③ チェックON/OFF（PATCH）
+  const handleCheck = async (id: number) => {
+    const token = localStorage.getItem("idToken");
+
+    try {
+      await fetch(`/api/shopping_lists/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          isDone: true,
+        }),
+      });
+
+      // ローカル更新
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, isDone: !item.isDone } : item
+        )
       );
-    });
+    } catch (err) {
+      console.error("PATCH エラー:", err);
+    }
   };
 
-  const handleCheck = (id: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isDone: !item.isDone } : item
-      )
-    );
+  // ④ 削除（DELETE）
+  const handleDelete = async (id: number) => {
+    const token = localStorage.getItem("idToken");
+
+    try {
+      await fetch(`/api/shopping_lists/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // ローカル更新
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      console.error("DELETE エラー:", err);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
+  // ⑤ ログアウト（Firebase関係）
   const handleLogout = () => {
-    console.log("ログアウト処理（ダミー）");
+    console.log("ログアウト処理（Firebase 担当が実装）");
   };
 
-  // 高優先度・低優先度のアイテムを分ける
-  const highPriorityItems = items.filter(item => item.priority === "high");
-  const lowPriorityItems = items.filter(item => item.priority === "low");
+  // 表示グループ分け
+  const highPriorityItems = items.filter((item) => item.priority === "high");
+  const lowPriorityItems = items.filter((item) => item.priority === "low");
 
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center py-10">
@@ -124,7 +185,7 @@ export default function HomePage() {
         {highPriorityItems.length > 0 && (
           <>
             <h2 className="text-2xl font-bold text-red-600 mb-2">優先度 高</h2>
-            {highPriorityItems.map(item => (
+            {highPriorityItems.map((item) => (
               <ShoppingItem
                 key={item.id}
                 id={item.id}
@@ -142,8 +203,10 @@ export default function HomePage() {
         {/* 低優先度 */}
         {lowPriorityItems.length > 0 && (
           <>
-            <h2 className="text-2xl font-bold text-gray-600 mt-6 mb-2">優先度 低</h2>
-            {lowPriorityItems.map(item => (
+            <h2 className="text-2xl font-bold text-gray-600 mt-6 mb-2">
+              優先度 低
+            </h2>
+            {lowPriorityItems.map((item) => (
               <ShoppingItem
                 key={item.id}
                 id={item.id}
@@ -175,19 +238,8 @@ export default function HomePage() {
       >
         ログアウト
       </button>
-
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
 
 
