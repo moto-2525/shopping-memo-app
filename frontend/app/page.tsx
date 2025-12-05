@@ -71,19 +71,36 @@ import { useState, useEffect } from "react";
 import ShoppingItem from "@/components/ShoppingItem";
 import ShoppingForm from "@/components/ShoppingForm";
 
+// 型定義
+type ApiShoppingItem = {
+  id: number;
+  item: string; // FastAPI 側の項目名
+  numberOfItem: number;
+  priority: "high" | "low";
+  isDone: boolean;
+};
+
+type ShoppingItemType = {
+  id: number;
+  name: string;
+  quantity: number;
+  priority: "high" | "low";
+  isDone: boolean;
+};
+
+// FastAPI → React の形式変換
+const convertItem = (d: ApiShoppingItem): ShoppingItemType => ({
+  id: d.id,
+  name: d.item,
+  quantity: d.numberOfItem,
+  priority: d.priority,
+  isDone: d.isDone,
+});
+
 export default function HomePage() {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<ShoppingItemType[]>([]);
 
-  // ※ FastAPI → React の形式に変換する関数
-  const convertItem = (d: unknown) => ({
-    id: d.id,
-    name: d.item,
-    quantity: d.numberOfItem,
-    priority: d.priority,
-    isDone: d.isDone,
-  });
-
-  // ① 初回ロード：一覧取得（GET）
+  // ① 初回ロード：一覧 GET
   useEffect(() => {
     const token = localStorage.getItem("idToken");
 
@@ -91,8 +108,8 @@ export default function HomePage() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((d: unknown) => convertItem(d));
+      .then((data: ApiShoppingItem[]) => {
+        const formatted = data.map((d) => convertItem(d));
         setItems(formatted);
       })
       .catch((err) => console.error("GET エラー:", err));
@@ -120,18 +137,17 @@ export default function HomePage() {
         }),
       });
 
-      const newItem = await res.json();
+      const newItem: ApiShoppingItem = await res.json();
       setItems((prev) => [...prev, convertItem(newItem)]);
     } catch (err) {
       console.error("POST エラー:", err);
     }
   };
 
-  // ③ チェックON/OFF（PATCH）
+  // ③ チェック ON/OFF（PATCH）
   const handleCheck = async (id: number) => {
     const token = localStorage.getItem("idToken");
 
-    // まずローカルの現在の isDone を取得
     const target = items.find((i) => i.id === id);
     if (!target) return;
 
@@ -205,13 +221,13 @@ export default function HomePage() {
     console.log("ログアウト処理（Firebase 担当が実装）");
   };
 
-  // 表示グループ分け
+  // 表示用優先度グループ分け
   const highPriorityItems = items.filter((item) => item.priority === "high");
   const lowPriorityItems = items.filter((item) => item.priority === "low");
 
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center py-10">
-      {/* ▼ 買い物リスト */}
+      {/* ▼ タイトル */}
       <h1 className="text-5xl font-bold text-center mb-4 text-amber-600">
         買い物リスト
       </h1>
@@ -258,7 +274,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* ▼ チェック済み一括削除 */}
+      {/* ▼ 一括削除 */}
       <div className="w-full max-w-md mt-6">
         <button
           onClick={handleBulkDelete}
@@ -268,7 +284,7 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* ▼ 白いカード（追加フォーム） */}
+      {/* ▼ 追加フォーム */}
       <div className="w-full max-w-md bg-white rounded-2xl p-10 mt-10 shadow">
         <h1 className="text-xl font-bold text-center mb-4 text-amber-500">
           ＋アイテム追加
