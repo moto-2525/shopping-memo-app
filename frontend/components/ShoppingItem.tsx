@@ -23,25 +23,22 @@ export default function ShoppingItem({
   return (
     <div
       className={`flex justify-between items-center p-4 mb-3 rounded-xl border shadow-sm transition 
-        ${priority === "high" ? "bg-red-100" : "bg-white"} 
-        ${isDone ? "opacity-60 line-through" : ""}`}
+        ${priority === "high" ? "bg-white" : "bg-white"} 
+        ${isDone ? "bg-gray-200 opacity-60 line-through" : "bg-white"}`}
     >
-      {/* 左側にチェックボタン */}
+      {/* 左側にチェックボックス */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => onCheck(id)}
-          className="text-sm px-3 py-1 bg-green-200 rounded hover:bg-green-300"
-        >
-          ✓
-        </button>
+        <input
+          type="checkbox"
+          checked={isDone}
+          onChange={() => onCheck(id)}
+          className="w-5 h-5 accent-green-500" // Tailwindで色とサイズ調整
+        />
 
         {/* アイテム情報（横並び） */}
         <div className="flex items-center gap-4">
           <p className="text-lg font-semibold">{name}</p>
           <p className="text-gray-700">{quantity}個</p>
-          <p className="text-gray-600 text-sm">
-            {priority === "high" ? "優先度:高" : "優先度:低"}
-          </p>
         </div>
       </div>
 

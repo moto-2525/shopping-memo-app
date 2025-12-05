@@ -67,72 +67,224 @@
 //トップページ
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ShoppingItem from "@/components/ShoppingItem";
 import ShoppingForm from "@/components/ShoppingForm";
 
+// 型定義
+type ApiShoppingItem = {
+  id: number;
+  item: string; // FastAPI 側の項目名
+  numberOfItem: number;
+  priority: "high" | "low";
+  isDone: boolean;
+};
+
+type ShoppingItemType = {
+  id: number;
+  name: string;
+  quantity: number;
+  priority: "high" | "low";
+  isDone: boolean;
+};
+
+// FastAPI → React の形式変換
+const convertItem = (d: ApiShoppingItem): ShoppingItemType => ({
+  id: d.id,
+  name: d.item,
+  quantity: d.numberOfItem,
+  priority: d.priority,
+  isDone: d.isDone,
+});
+
 export default function HomePage() {
-  const [items, setItems] = useState([
-    { id: 1, name: "牛乳", quantity: 1, isDone: false, priority: "high" },
-    { id: 2, name: "パン", quantity: 1, isDone: false, priority: "high" },
-    { id: 3, name: "卵", quantity: 1, isDone: false, priority: "low" },
-  ]);
+  const [items, setItems] = useState<ShoppingItemType[]>([]);
 
-  const handleAdd = (item: { name: string; quantity: number; priority: "high" | "low" }) => {
-    setItems((prev) => {
-      const newItems = [
-        ...prev,
-        { id: Date.now(), ...item, isDone: false },
-      ];
+  // ① 初回ロード：一覧 GET
+  useEffect(() => {
+    const token = localStorage.getItem("idToken");
 
-      return newItems.sort((a, b) =>
-        a.priority === b.priority ? 0 : a.priority === "high" ? -1 : 1
+    fetch("/api/shopping_lists", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data: ApiShoppingItem[]) => {
+        const formatted = data.map((d) => convertItem(d));
+        setItems(formatted);
+      })
+      .catch((err) => console.error("GET エラー:", err));
+  }, []);
+
+  // ② アイテム追加（POST）
+  const handleAdd = async (item: {
+    name: string;
+    quantity: number;
+    priority: "high" | "low";
+  }) => {
+    const token = localStorage.getItem("idToken");
+
+    try {
+      const res = await fetch("/api/shopping_lists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          item: item.name,
+          numberOfItem: item.quantity,
+          priority: item.priority,
+        }),
+      });
+
+      const newItem: ApiShoppingItem = await res.json();
+      setItems((prev) => [...prev, convertItem(newItem)]);
+    } catch (err) {
+      console.error("POST エラー:", err);
+    }
+  };
+
+  // ③ チェック ON/OFF（PATCH）
+  const handleCheck = async (id: number) => {
+    const token = localStorage.getItem("idToken");
+
+    const target = items.find((i) => i.id === id);
+    if (!target) return;
+
+    const newValue = !target.isDone;
+
+    try {
+      await fetch(`/api/shopping_lists/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isDone: newValue }),
+      });
+
+      // ローカル更新
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, isDone: newValue } : item
+        )
       );
-    });
+    } catch (err) {
+      console.error("PATCH エラー:", err);
+    }
   };
 
-  const handleCheck = (id: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isDone: !item.isDone } : item
-      )
-    );
+  // ④ 削除（DELETE）
+  const handleDelete = async (id: number) => {
+    const token = localStorage.getItem("idToken");
+
+    try {
+      await fetch(`/api/shopping_lists/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      console.error("DELETE エラー:", err);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  // ⑤ チェック済み一括削除
+  const handleBulkDelete = async () => {
+    const token = localStorage.getItem("idToken");
+    const checkedIds = items.filter((i) => i.isDone).map((i) => i.id);
+
+    if (checkedIds.length === 0) {
+      alert("削除するチェック済みアイテムがありません");
+      return;
+    }
+
+    try {
+      await Promise.all(
+        checkedIds.map((id) =>
+          fetch(`/api/shopping_lists/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        )
+      );
+
+      setItems((prev) => prev.filter((item) => !item.isDone));
+    } catch (err) {
+      console.error("Bulk DELETE エラー:", err);
+    }
   };
 
+  // ⑥ ログアウト
   const handleLogout = () => {
-    console.log("ログアウト処理（ダミー）");
+    console.log("ログアウト処理（Firebase 担当が実装）");
   };
+
+  // 表示用優先度グループ分け
+  const highPriorityItems = items.filter((item) => item.priority === "high");
+  const lowPriorityItems = items.filter((item) => item.priority === "low");
 
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center py-10">
-
-      
-
-      {/* ▼ 買い物リスト */}
+      {/* ▼ タイトル */}
       <h1 className="text-5xl font-bold text-center mb-4 text-amber-600">
         買い物リスト
       </h1>
 
       <div className="w-full max-w-md">
-        {items.map((item) => (
-          <ShoppingItem
-            key={item.id}
-            id={item.id}
-            name={item.name}
-            quantity={item.quantity}
-            priority={item.priority}
-            isDone={item.isDone}
-            onCheck={handleCheck}
-            onDelete={handleDelete}
-          />
-        ))}
+        {/* 高優先度 */}
+        {highPriorityItems.length > 0 && (
+          <>
+            <h2 className="text-2xl font-bold text-red-600 mb-2">優先度 高</h2>
+            {highPriorityItems.map((item) => (
+              <ShoppingItem
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                quantity={item.quantity}
+                priority={item.priority}
+                isDone={item.isDone}
+                onCheck={handleCheck}
+                onDelete={handleDelete}
+              />
+            ))}
+          </>
+        )}
+
+        {/* 低優先度 */}
+        {lowPriorityItems.length > 0 && (
+          <>
+            <h2 className="text-2xl font-bold text-gray-600 mt-6 mb-2">
+              優先度 低
+            </h2>
+            {lowPriorityItems.map((item) => (
+              <ShoppingItem
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                quantity={item.quantity}
+                priority={item.priority}
+                isDone={item.isDone}
+                onCheck={handleCheck}
+                onDelete={handleDelete}
+              />
+            ))}
+          </>
+        )}
       </div>
 
-      {/* ▼ 白いカード（追加フォーム） */}
+      {/* ▼ 一括削除 */}
+      <div className="w-full max-w-md mt-6">
+        <button
+          onClick={handleBulkDelete}
+          className="w-full bg-white border border-red-300 text-red-600 font-semibold py-3 rounded-xl shadow hover:bg-red-50 transition"
+        >
+          チェック済みアイテムを一括削除
+        </button>
+      </div>
+
+      {/* ▼ 追加フォーム */}
       <div className="w-full max-w-md bg-white rounded-2xl p-10 mt-10 shadow">
         <h1 className="text-xl font-bold text-center mb-4 text-amber-500">
           ＋アイテム追加
@@ -141,27 +293,13 @@ export default function HomePage() {
         <ShoppingForm onAdd={handleAdd} />
       </div>
 
-      {/* ▼ ログアウトボタン */}
+      {/* ▼ ログアウト */}
       <button
         onClick={handleLogout}
-        className="mb-6 text-sm text-blue-600 underline hover:text-red-800"
+        className="mb-6 mt-2 text-sm text-blue-600 underline hover:text-red-800"
       >
         ログアウト
       </button>
-
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
