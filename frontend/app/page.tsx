@@ -76,7 +76,7 @@ export default function HomePage() {
 
   // ① 初回ロード：一覧取得（GET）
   useEffect(() => {
-    const token = localStorage.getItem("idToken"); // Firebase関係
+    const token = localStorage.getItem("idToken");
 
     fetch("/api/shopping_lists", {
       headers: {
@@ -111,8 +111,6 @@ export default function HomePage() {
       });
 
       const newItem = await res.json();
-
-      // 追加して状態更新
       setItems((prev) => [...prev, newItem]);
     } catch (err) {
       console.error("POST エラー:", err);
@@ -156,14 +154,43 @@ export default function HomePage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // ローカル更新
       setItems((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
       console.error("DELETE エラー:", err);
     }
   };
 
-  // ⑤ ログアウト（Firebase関係）
+  // ⑤ 追加：チェックしたアイテムを一括削除（DELETE 複数）
+  const handleBulkDelete = async () => {
+    const token = localStorage.getItem("idToken");
+
+    // チェック済みの id を全部集める
+    const checkedIds = items.filter((i) => i.isDone).map((i) => i.id);
+
+    if (checkedIds.length === 0) {
+      alert("削除するチェック済みアイテムがありません");
+      return;
+    }
+
+    try {
+      // まとめて DELETE
+      await Promise.all(
+        checkedIds.map((id) =>
+          fetch(`/api/shopping_lists/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        )
+      );
+
+      // ローカル状態から一括で削除
+      setItems((prev) => prev.filter((item) => !item.isDone));
+    } catch (err) {
+      console.error("Bulk DELETE エラー:", err);
+    }
+  };
+
+  // ⑥ ログアウト（Firebase関係）
   const handleLogout = () => {
     console.log("ログアウト処理（Firebase 担当が実装）");
   };
@@ -174,10 +201,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center py-10">
-
       {/* ▼ 買い物リスト */}
       <h1 className="text-5xl font-bold text-center mb-4 text-amber-600">
-        買い物リスト
+      買い物リスト
       </h1>
 
       <div className="w-full max-w-md">
@@ -195,51 +221,58 @@ export default function HomePage() {
                 isDone={item.isDone}
                 onCheck={handleCheck}
                 onDelete={handleDelete}
-              />
-            ))}
-          </>
-        )}
+             />
+           ))}
+         </>
+       )}
 
         {/* 低優先度 */}
         {lowPriorityItems.length > 0 && (
           <>
-            <h2 className="text-2xl font-bold text-gray-600 mt-6 mb-2">
-              優先度 低
-            </h2>
-            {lowPriorityItems.map((item) => (
-              <ShoppingItem
-                key={item.id}
-                id={item.id}
-                name={item.name}
-                quantity={item.quantity}
-                priority={item.priority}
-                isDone={item.isDone}
-                onCheck={handleCheck}
-                onDelete={handleDelete}
-              />
-            ))}
-          </>
-        )}
-      </div>
+            <h2 className="text-2xl font-bold text-gray-600 mt-6 mb-2">優先度 低</h2>
+          {lowPriorityItems.map((item) => (
+           <ShoppingItem
+            key={item.id}
+            id={item.id}
+            name={item.name}
+            quantity={item.quantity}
+            priority={item.priority}
+            isDone={item.isDone}
+            onCheck={handleCheck}
+            onDelete={handleDelete}
+          />
+      ))}
+    </>
+  )}
+</div>
 
-      {/* ▼ 白いカード（追加フォーム） */}
-      <div className="w-full max-w-md bg-white rounded-2xl p-10 mt-10 shadow">
-        <h1 className="text-xl font-bold text-center mb-4 text-amber-500">
-          ＋アイテム追加
-        </h1>
+{/* チェック済み一括削除ボタン（移動＆見た目変更） */}
+<div className="w-full max-w-md mt-6">
+  <button
+    onClick={handleBulkDelete}
+    className="w-full bg-white border border-red-300 text-red-600 font-semibold py-3 rounded-xl shadow hover:bg-red-50 transition"
+  >
+    チェック済みアイテムを一括削除
+  </button>
+</div>
 
-        <ShoppingForm onAdd={handleAdd} />
-      </div>
+{/* ▼ 白いカード（追加フォーム） */}
+<div className="w-full max-w-md bg-white rounded-2xl p-10 mt-10 shadow">
+  <h1 className="text-xl font-bold text-center mb-4 text-amber-500">
+    ＋アイテム追加
+  </h1>
 
-      {/* ▼ ログアウトボタン */}
+  <ShoppingForm onAdd={handleAdd} />
+</div>
+
+
+      {/* ログアウトボタン */}
       <button
         onClick={handleLogout}
-        className="mb-6 text-sm text-blue-600 underline hover:text-red-800"
+        className="mb-6 mt-2 text-sm text-blue-600 underline hover:text-red-800"
       >
         ログアウト
       </button>
     </div>
   );
 }
-
-
