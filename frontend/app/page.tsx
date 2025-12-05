@@ -75,7 +75,7 @@ export default function HomePage() {
   const [items, setItems] = useState([]);
 
   // ※ FastAPI → React の形式に変換する関数
-  const convertItem = (d: any) => ({
+  const convertItem = (d: unknown) => ({
     id: d.id,
     name: d.item,
     quantity: d.numberOfItem,
@@ -92,7 +92,7 @@ export default function HomePage() {
     })
       .then((res) => res.json())
       .then((data) => {
-        const formatted = data.map((d: any) => convertItem(d));
+        const formatted = data.map((d: unknown) => convertItem(d));
         setItems(formatted);
       })
       .catch((err) => console.error("GET エラー:", err));
