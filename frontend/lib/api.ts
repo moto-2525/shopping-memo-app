@@ -1,33 +1,16 @@
-// lib/api.ts
-import { auth } from "@/lib/firebase/config";
+// ログイン中のIDトークンを取得してAPIに送る
 
-/**
- * 認証付きで FastAPI にリクエストを送る関数
- */
-export async function fetchWithAuth(
-    url: string,
-    options: RequestInit = {}
-) {
-    // Firebase のログインユーザー取得
-    const user = auth.currentUser;
+import { getAuth } from "firebase/auth";
 
-    // 未ログインの場合
-    if (!user) {
-        throw new Error("ログインが必要です");
-    }
-
-    // Firebase IDトークン取得
-    const token = await user.getIdToken();
-
-    //トークンをAuthorizationヘッダー追加して送信
+export async function fetchWithAuth() {
+    const auth = getAuth()
+    const token = await auth.currentUser?.getIdToken
     const res = await fetch("http://localhost:8000/shopping_lists", {
-        ...options,
         headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
-            ...options.headers,
         },
-    });
+    })
 
-    return res;
+    return res.json()
+
 }

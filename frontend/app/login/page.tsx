@@ -5,13 +5,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/firebase/auth";
 import Link from "next/link";
+import "@/lib/firebase/config";
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       await login(email, password);
       router.push("/"); // ログイン後にトップページへ
