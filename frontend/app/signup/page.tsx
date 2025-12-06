@@ -5,7 +5,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { signup } from "@/lib/firebase/auth";
 import { useRouter } from "next/navigation";
-import "@/lib/firebase/config";
+import { auth } from "@/lib/firebase/config";
+
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -13,8 +14,9 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
 
-  // ログインが失敗したときにリダイレクトする仕組みを追加（saori）
-  const handleSignup = async () => {
+  // ログインが失敗したときにリダイレクトする仕組みを追加
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       await signup(email, password);
       router.push("/");

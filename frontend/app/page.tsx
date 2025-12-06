@@ -72,6 +72,7 @@ import { useState, useEffect } from "react";
 import ShoppingItem from "@/components/ShoppingItem";
 import ShoppingForm from "@/components/ShoppingForm";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import "@/lib/firebase/config";
 
 // 型定義
@@ -100,7 +101,10 @@ const convertItem = (d: ApiShoppingItem): ShoppingItemType => ({
   isDone: d.isDone,
 });
 
+
+
 export default function HomePage() {
+  const router = useRouter();
   const [items, setItems] = useState<ShoppingItemType[]>([]);
   const [userToken, setUserToken] = useState<string | null>(null);
 
@@ -236,11 +240,15 @@ export default function HomePage() {
   };
 
   // ⑥ ログアウト
-  const handleLogout = () => {
+
+  const handleLogout = async () => {
+    console.log("🟡 logout button clicked");
     const auth = getAuth();
-    auth.signOut();
+    await auth.signOut();
+    console.log("🟢 firebase signOut finished");
     setUserToken(null);
     setItems([]);
+    router.push("/login")
   };
 
   // 表示用優先度グループ分け
